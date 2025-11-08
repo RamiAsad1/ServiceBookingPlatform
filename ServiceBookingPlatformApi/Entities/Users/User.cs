@@ -9,7 +9,6 @@
         public string? PasswordHash { get; set; }
         public String? PhoneNumber { get; set; }
         public DateTime? CreatedAt { get; set; }
-
         public ServiceProvider? ServiceProvider { get; set; }
         public Role? Role { get; set; }
 

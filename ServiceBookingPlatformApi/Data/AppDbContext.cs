@@ -16,7 +16,44 @@ namespace ServiceBookingPlatformApi.Data
         public DbSet<Booking> Bookings  => Set<Booking>();  
         public DbSet<BookingStatus> BookingStatus => Set<BookingStatus>();
         public DbSet<Review> Reviews => Set<Review>();
-  
+
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+            
+            modelBuilder.Entity<Review>()
+                .HasOne(r => r.Booking)
+                .WithOne(b => b.Review)
+                .HasForeignKey<Review>(r => r.BookingId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Review>()
+                .HasOne(r => r.User)
+                .WithMany()
+                .HasForeignKey(r => r.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Booking>()
+                .HasOne(b => b.Service)
+                .WithMany()
+                .HasForeignKey(b => b.ServiceId)
+                .OnDelete(DeleteBehavior.Restrict); 
+
+            modelBuilder.Entity<Booking>()
+                .HasOne(b => b.User)
+                .WithMany()
+                .HasForeignKey(b => b.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Booking>()
+                .HasOne(b => b.ServiceProvider)
+                .WithMany()
+                .HasForeignKey(b => b.ProviderId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+        }
+
 
     }
 }

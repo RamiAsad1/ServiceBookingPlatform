@@ -9,7 +9,6 @@
         public string? Description { get; set; }
         public decimal? Price { get; set; }
         public TimeSpan? Duration { get; set; }
-
         public ServiceCategory? Category { get; set; }
         public Users.ServiceProvider? ServiceProvider { get; set; }
         public ICollection<ServiceImage> Images { get; set; } = new List<ServiceImage>();
