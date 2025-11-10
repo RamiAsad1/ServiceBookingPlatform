@@ -9,7 +9,7 @@
         public int ReviewId { get; set; }
         public string? Status { get; set; }
         public DateTime? BookingDate { get; set; }
-        public DateTime? CreatedAt { get; set; }
+        public DateTime? CreatedAt { get; set; } = DateTime.Now;
         public Users.ServiceProvider? ServiceProvider { get; set; }
         public Services.Service? Service { get; set; }
         public Users.User? User { get; set; }
