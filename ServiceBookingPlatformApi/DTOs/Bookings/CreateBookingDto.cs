@@ -9,6 +9,9 @@ namespace ServiceBookingPlatformApi.DTOs.Bookings
         public int ProviderId { get; set; }
         public int ReviewId { get; set; }
         public string? Status { get; set; }
-        public DateTime BookingDate { get; set; 
+        public DateTime BookingDate
+        {
+            get; set;
+        }
     }
 }

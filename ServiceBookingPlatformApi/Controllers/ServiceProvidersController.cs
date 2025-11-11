@@ -1,5 +1,10 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using ServiceBookingPlatformApi.DTOs.ServiceProviders;
+using ServiceBookingPlatformApi.DTOs.Users;
+using ServiceBookingPlatformApi.Entities.Users;
 using ServiceBookingPlatformApi.Repositories;
 
 namespace ServiceBookingPlatformApi.Controllers
@@ -9,48 +14,61 @@ namespace ServiceBookingPlatformApi.Controllers
     public class ServiceProvidersController : ControllerBase
     {
         private readonly UnitOfWork _unitOfWork;
+        private readonly IMapper _mapper;
 
-        public ServiceProvidersController(UnitOfWork unitOfWork)
+        public ServiceProvidersController(UnitOfWork unitOfWork, IMapper mapper)
         {
             _unitOfWork = unitOfWork;
+            _mapper = mapper;
         }
 
 
         [HttpGet]
         public async Task<IActionResult> GetAllServiceProviders()
         {
-            var ServiceProviders = await _unitOfWork.Repository<Entities.Users.ServiceProvider>().GetAllAsync();
-            return Ok(ServiceProviders);
+            var serviceProviders = await _unitOfWork.Repository<Entities.Users.ServiceProvider>().GetAllAsync();
+            var serviceProvidersDto = _mapper.Map<IEnumerable<ServiceProviderDto>>(serviceProviders);
+            return Ok(serviceProvidersDto);
         }
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetServiceProviderById(int id)
         {
-            var ServiceProvider = await _unitOfWork.Repository<Entities.Users.ServiceProvider>().GetByIdAsync(id);
-            if (ServiceProvider == null)
+            var serviceProvider = await _unitOfWork.Repository<Entities.Users.ServiceProvider>().GetByIdAsync(id);
+            if (serviceProvider == null)
             {
                 return NotFound();
             }
-            return Ok(ServiceProvider);
+            var serviceProviderDto = _mapper.Map<ServiceProviderDto>(serviceProvider);
+            return Ok(serviceProviderDto);
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateServiceProvider([FromBody] Entities.Users.ServiceProvider ServiceProvider)
+        public async Task<IActionResult> CreateServiceProvider([FromBody] CreateServiceProviderDto createDto)
         {
-            await _unitOfWork.Repository<Entities.Users.ServiceProvider>().AddAsync(ServiceProvider);
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var serviceProvider = _mapper.Map<Entities.Users.ServiceProvider>(createDto);
+            await _unitOfWork.Repository<Entities.Users.ServiceProvider>().AddAsync(serviceProvider);
             await _unitOfWork.SaveAsync();
-            return CreatedAtAction(nameof(GetServiceProviderById), new { id = ServiceProvider.Id}, ServiceProvider);
+            var serviceProviderDto = _mapper.Map<ServiceProviderDto>(serviceProvider);
+
+            return CreatedAtAction(nameof(GetServiceProviderById), new { id = serviceProvider.Id }, serviceProviderDto);
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateServiceProvider(int id, [FromBody] Entities.Users.ServiceProvider ServiceProvider)
+        public async Task<IActionResult> UpdateServiceProvider(int id, [FromBody] UpdateServiceProviderDto updateDto)
         {
-            if (id != ServiceProvider.Id)
-            {
-                return BadRequest();
-            }
-            _unitOfWork.Repository<Entities.Users.ServiceProvider>().Update(ServiceProvider);
+            var existingServiceProvider = await _unitOfWork.Repository<Entities.Users.ServiceProvider>().GetByIdAsync(id);
+            if (existingServiceProvider == null)
+                return NotFound();
+
+            _mapper.Map(updateDto, existingServiceProvider);
+
+            _unitOfWork.Repository<Entities.Users.ServiceProvider>().Update(existingServiceProvider);
             await _unitOfWork.SaveAsync();
+
             return NoContent();
         }
 
@@ -64,6 +82,7 @@ namespace ServiceBookingPlatformApi.Controllers
             }
             _unitOfWork.Repository<Entities.Users.ServiceProvider>().Delete(ServiceProvider);
             await _unitOfWork.SaveAsync();
+
             return NoContent();
         }
 

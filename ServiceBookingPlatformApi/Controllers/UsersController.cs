@@ -1,5 +1,7 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using ServiceBookingPlatformApi.DTOs.Users;
 using ServiceBookingPlatformApi.Entities.Users;
 using ServiceBookingPlatformApi.Repositories;
 
@@ -10,17 +12,21 @@ namespace ServiceBookingPlatformApi.Controllers
     public class UsersController : ControllerBase
     {
         private readonly UnitOfWork _unitOfWork;
+        private readonly IMapper _mapper;
 
-        public UsersController(UnitOfWork unitOfWork)
+        public UsersController(UnitOfWork unitOfWork, IMapper mapper)
         {
             _unitOfWork = unitOfWork;
+            _mapper = mapper;
         }
 
         [HttpGet]
         public async Task<IActionResult> GetAllUsers()
         {
             var users = await _unitOfWork.Repository<User>().GetAllAsync();
-            return Ok(users);
+            var usersDto = _mapper.Map<IEnumerable<UserDto>>(users);
+
+            return Ok(usersDto);
         }
 
         [HttpGet("{id}")]
@@ -31,26 +37,37 @@ namespace ServiceBookingPlatformApi.Controllers
             {
                 return NotFound();
             }
-            return Ok(user);
+            var userDto = _mapper.Map<UserDto>(user);
+
+            return Ok(userDto);
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateUser([FromBody] User user)
+        public async Task<IActionResult> CreateUser([FromBody] CreateUserDto createDto)
         {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+            
+            var user = _mapper.Map<User>(createDto);
             await _unitOfWork.Repository<User>().AddAsync(user);
             await _unitOfWork.SaveAsync();
-            return CreatedAtAction(nameof(GetUserById), new { id = user.Id }, user);
+            var userDto = _mapper.Map<UserDto>(user);
+
+            return CreatedAtAction(nameof(GetUserById), new { id = user.Id }, userDto);
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateUser(int id, [FromBody] User user)
+        public async Task<IActionResult> UpdateUser(int id, [FromBody] UpdateUserDto updateDto)
         {
-            if (id != user.Id)
-            {
-                return BadRequest();
-            }
-            _unitOfWork.Repository<User>().Update(user);
+            var existingUser = await _unitOfWork.Repository<User>().GetByIdAsync(id);
+            if (existingUser == null)
+                return NotFound();
+
+            _mapper.Map(updateDto, existingUser);
+
+            _unitOfWork.Repository<User>().Update(existingUser);
             await _unitOfWork.SaveAsync();
+
             return NoContent();
         }
 
@@ -64,6 +81,7 @@ namespace ServiceBookingPlatformApi.Controllers
             }
             _unitOfWork.Repository<User>().Delete(user);
             await _unitOfWork.SaveAsync();
+
             return NoContent();
         }
     }
