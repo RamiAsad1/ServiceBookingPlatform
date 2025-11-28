@@ -66,7 +66,8 @@
         {
             new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
             new Claim(ClaimTypes.Name, user.Username ?? ""),
-            new Claim(ClaimTypes.Email, user.Email ?? "")
+            new Claim(ClaimTypes.Email, user.Email ?? ""),
+            new Claim(ClaimTypes.Role, user.Role.Name ?? "")
         };
 
             if (user.Role != null && !string.IsNullOrEmpty(user.Role.Name))

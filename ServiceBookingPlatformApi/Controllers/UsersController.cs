@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using ServiceBookingPlatformApi.DTOs.Users;
@@ -20,6 +21,7 @@ namespace ServiceBookingPlatformApi.Controllers
             _mapper = mapper;
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpGet]
         public async Task<IActionResult> GetAllUsers()
         {
@@ -29,6 +31,7 @@ namespace ServiceBookingPlatformApi.Controllers
             return Ok(usersDto);
         }
 
+        [Authorize(Roles = "Admin,User")]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetUserById(int id)
         {
@@ -37,11 +40,17 @@ namespace ServiceBookingPlatformApi.Controllers
             {
                 return NotFound();
             }
+
+            var isAdmin = User.IsInRole("Admin");
+            if (!isAdmin && id != user.Id)
+                return Forbid();
+
             var userDto = _mapper.Map<UserDto>(user);
 
             return Ok(userDto);
         }
 
+        [AllowAnonymous]
         [HttpPost]
         public async Task<IActionResult> CreateUser([FromBody] CreateUserDto createDto)
         {
@@ -56,12 +65,18 @@ namespace ServiceBookingPlatformApi.Controllers
             return CreatedAtAction(nameof(GetUserById), new { id = user.Id }, userDto);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateUser(int id, [FromBody] UpdateUserDto updateDto)
         {
             var existingUser = await _unitOfWork.Repository<User>().GetByIdAsync(id);
             if (existingUser == null)
                 return NotFound();
+
+            var userIdFromToken = int.Parse(User.FindFirst("id")!.Value);
+            var isAdmin = User.IsInRole("Admin");
+            if (!isAdmin && existingUser.Id != userIdFromToken)
+                return Forbid();
 
             _mapper.Map(updateDto, existingUser);
 
@@ -71,6 +86,7 @@ namespace ServiceBookingPlatformApi.Controllers
             return NoContent();
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUser(int id)
         {

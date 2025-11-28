@@ -10,7 +10,7 @@
         public string? PhoneNumber { get; set; }
         public DateTime? CreatedAt { get; set; } = DateTime.UtcNow;
         public ServiceProvider? ServiceProvider { get; set; }
-        public Role? Role { get; set; }
+        public Role Role { get; set; } = null!;
 
     }
 }

@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
@@ -22,7 +23,7 @@ namespace ServiceBookingPlatformApi.Controllers
             _mapper = mapper;
         }
 
-
+        [Authorize(Roles = "Admin")]
         [HttpGet]
         public async Task<IActionResult> GetAllServiceProviders()
         {
@@ -31,6 +32,7 @@ namespace ServiceBookingPlatformApi.Controllers
             return Ok(serviceProvidersDto);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetServiceProviderById(int id)
         {
@@ -43,6 +45,7 @@ namespace ServiceBookingPlatformApi.Controllers
             return Ok(serviceProviderDto);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<IActionResult> CreateServiceProvider([FromBody] CreateServiceProviderDto createDto)
         {
@@ -57,6 +60,7 @@ namespace ServiceBookingPlatformApi.Controllers
             return CreatedAtAction(nameof(GetServiceProviderById), new { id = serviceProvider.Id }, serviceProviderDto);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateServiceProvider(int id, [FromBody] UpdateServiceProviderDto updateDto)
         {
@@ -72,6 +76,7 @@ namespace ServiceBookingPlatformApi.Controllers
             return NoContent();
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteServiceProvider(int id)
         {
