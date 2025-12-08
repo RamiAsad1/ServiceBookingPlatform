@@ -1,5 +1,6 @@
 ﻿namespace ServiceBookingPlatformApi.Repositories.Implementations
 {
+    using AutoMapper;
     using Microsoft.AspNetCore.Http.HttpResults;
     using Microsoft.AspNetCore.Identity;
     using Microsoft.Extensions.Configuration;
@@ -16,12 +17,14 @@
         private readonly UnitOfWork _uow;
         private readonly IPasswordHasher<User> _passwordHasher;
         private readonly IConfiguration _config;
+        private readonly IMapper _mapper;
 
-        public AuthService(UnitOfWork uow, IPasswordHasher<User> passwordHasher, IConfiguration config)
+        public AuthService(UnitOfWork uow, IPasswordHasher<User> passwordHasher, IConfiguration config,IMapper mapper)
         {
             _uow = uow;
             _passwordHasher = passwordHasher;
             _config = config;
+            _mapper = mapper;
         }
 
         public async Task<User?> RegisterAsync(CreateUserDto dto)
@@ -29,16 +32,8 @@
             var existing = (await _uow.Repository<User>().GetAllAsync()).FirstOrDefault(u => u.Email == dto.Email);
             if (existing != null) return null;
 
-            var user = new User
-            {
-                Username = dto.Username,
-                Email = dto.Email,
-                PhoneNumber = dto.PhoneNumber,
-                RoleId = dto.RoleId 
-            };
-
+            var user = _mapper.Map<User>(dto);
             user.PasswordHash = _passwordHasher.HashPassword(user, dto.Password);
-
             await _uow.Repository<User>().AddAsync(user);
             await _uow.SaveAsync();
             return user;
@@ -63,17 +58,12 @@
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
             var claims = new List<Claim>
-        {
-            new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-            new Claim(ClaimTypes.Name, user.Username ?? ""),
-            new Claim(ClaimTypes.Email, user.Email ?? ""),
-            new Claim(ClaimTypes.Role, user.Role.Name ?? "")
-        };
-
-            if (user.Role != null && !string.IsNullOrEmpty(user.Role.Name))
-                claims.Add(new Claim(ClaimTypes.Role, user.Role.Name));
-            else if (user.RoleId.HasValue)
-                claims.Add(new Claim(ClaimTypes.Role, user.RoleId.Value.ToString()));
+            {
+                new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+                new Claim(ClaimTypes.Name, user.Username ?? ""),
+                new Claim(ClaimTypes.Email, user.Email ?? ""),
+            };
+            claims.Add(new Claim(ClaimTypes.Role, user.Role.ToString()));
 
             var token = new JwtSecurityToken(
                 issuer: jwtSection["Issuer"],

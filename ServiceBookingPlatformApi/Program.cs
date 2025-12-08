@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
 using ServiceBookingPlatformApi.Data;
@@ -27,9 +26,10 @@ builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 
 builder.Services.AddScoped<UnitOfWork>();
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+builder.Services.AddScoped<IAuthService, AuthService>();
 
 var jwtSection = builder.Configuration.GetSection("Jwt");
-var key = Encoding.UTF8.GetBytes(jwtSection["Key"]);
+var key = Encoding.UTF8.GetBytes(jwtSection["Key"]!);
 
 builder.Services.AddAuthentication(options =>
 {
@@ -52,7 +52,6 @@ builder.Services.AddAuthentication(options =>
         ClockSkew = TimeSpan.FromMinutes(2)
     };
 });
-
 
 var app = builder.Build();
 

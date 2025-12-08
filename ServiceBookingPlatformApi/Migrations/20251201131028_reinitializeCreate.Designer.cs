@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ServiceBookingPlatformApi.Data;
 
@@ -11,9 +12,11 @@ using ServiceBookingPlatformApi.Data;
 namespace ServiceBookingPlatformApi.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251201131028_reinitializeCreate")]
+    partial class reinitializeCreate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -194,6 +197,23 @@ namespace ServiceBookingPlatformApi.Migrations
                     b.ToTable("ServiceImages");
                 });
 
+            modelBuilder.Entity("ServiceBookingPlatformApi.Entities.Users.Role", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Roles");
+                });
+
             modelBuilder.Entity("ServiceBookingPlatformApi.Entities.Users.ServiceProvider", b =>
                 {
                     b.Property<int>("Id")
@@ -245,13 +265,15 @@ namespace ServiceBookingPlatformApi.Migrations
                     b.Property<string>("PhoneNumber")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("Role")
+                    b.Property<int?>("RoleId")
                         .HasColumnType("int");
 
                     b.Property<string>("Username")
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("RoleId");
 
                     b.ToTable("Users");
                 });
@@ -354,6 +376,15 @@ namespace ServiceBookingPlatformApi.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("ServiceBookingPlatformApi.Entities.Users.User", b =>
+                {
+                    b.HasOne("ServiceBookingPlatformApi.Entities.Users.Role", "Role")
+                        .WithMany("Users")
+                        .HasForeignKey("RoleId");
+
+                    b.Navigation("Role");
+                });
+
             modelBuilder.Entity("ServiceBookingPlatformApi.Entities.Bookings.Booking", b =>
                 {
                     b.Navigation("Review");
@@ -369,6 +400,11 @@ namespace ServiceBookingPlatformApi.Migrations
             modelBuilder.Entity("ServiceBookingPlatformApi.Entities.Services.ServiceCategory", b =>
                 {
                     b.Navigation("Services");
+                });
+
+            modelBuilder.Entity("ServiceBookingPlatformApi.Entities.Users.Role", b =>
+                {
+                    b.Navigation("Users");
                 });
 
             modelBuilder.Entity("ServiceBookingPlatformApi.Entities.Users.User", b =>
